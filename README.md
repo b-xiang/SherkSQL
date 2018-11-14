@@ -10,4 +10,5 @@
 - [首页PHPHTMLjQueryLINUXMySQLWEB周边发现&&分享SQL语句执行过程详解,一条sql到底是怎样执行的](http://www.dodobook.net/mysql/3251)
 - [MySQL 语法解析](https://jin-yang.github.io/post/mysql-parser.html)
 - [如果要做sql的一个解析器，已经生成ast了，接下来要怎么做呢？到ast这一步之后不知道接下来怎么做](https://www.zhihu.com/question/53617196)
-
+- [如何通过SQL语句生产干净的AST树？](https://www.zhihu.com/question/61569096)
+- [一般在写SQL时需要注意哪些问题，可以提高查询的效率？](https://www.zhihu.com/question/29619558)
