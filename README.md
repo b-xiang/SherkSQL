@@ -1,6 +1,8 @@
-# Smaug
+# SmaugSQL
 用于自动最优化 sql 的 mysql 工具（A mysql tool for optimizing sql automatically）.
 
+## 说明
+此项目是我的 [Sherk](https://github.com/Lvsi-China/Sherk) 子项目，等到Sherk项目完成时，我会把SQL优化部分独立出来到此项目中，尽情期待。
 
 # 参考资料
 - [Druid Wiki](https://github.com/alibaba/druid/wiki)
