@@ -8,7 +8,7 @@ link_libraries(libmsgpackc.a)
 
 set(INCLUDE_DIR ./include)
 set(MODULE_DIR ./module)
-add_executable(sherkSystem system.c
+add_executable(sherkSystem sqlparse.c
 
                 ${INCLUDE_DIR}/define/const.h
         #        ${INCLUDE_DIR}/define/exitcode.h

@@ -806,7 +806,7 @@ ReadBuffer_common(SMgrRelation smgr, char relpersistence, ForkNumber forkNum,
 			ereport(ERROR,
 			 (errmsg("unexpected data beyond EOF in block %u of relation %s",
 					 blockNum, relpath(smgr->smgr_rnode, forkNum)),
-			  errhint("This has been seen to occur with buggy kernels; consider updating your system.")));
+			  errhint("This has been seen to occur with buggy kernels; consider updating your sqlparse.")));
 
 		/*
 		 * We *must* do smgrextend before succeeding, else the page will not
@@ -1858,7 +1858,7 @@ BufferSync(int flags)
 	 * IO. The sorting is also important for the implementation of balancing
 	 * writes between tablespaces. Without balancing writes we'd potentially
 	 * end up writing to the tablespaces one-by-one; possibly overloading the
-	 * underlying system.
+	 * underlying sqlparse.
 	 */
 	qsort(CkptBufferIds, num_to_scan, sizeof(CkptSortItem),
 		  ckpt_buforder_comparator);
@@ -2722,7 +2722,7 @@ FlushBuffer(BufferDesc *buf, SMgrRelation reln)
 	 * GetFakeLSNForUnloggedRel.  It is unlikely but possible that the fake
 	 * LSN counter could advance past the WAL insertion point; and if it did
 	 * happen, attempting to flush WAL through that location would fail, with
-	 * disastrous system-wide consequences.  To make sure that can't happen,
+	 * disastrous sqlparse-wide consequences.  To make sure that can't happen,
 	 * skip the flush if the buffer isn't permanent.
 	 */
 	if (buf_state & BM_PERMANENT)

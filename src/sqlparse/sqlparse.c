@@ -4,7 +4,7 @@
 
 #include <sys/shm.h>
 
-int sherkSystem_active(){
+int sherkSQL_active(){
 
 
 }

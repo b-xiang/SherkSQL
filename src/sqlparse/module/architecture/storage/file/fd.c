@@ -14,8 +14,8 @@
  * This code manages a cache of 'virtual' file descriptors (VFDs).
  * The server opens many file descriptors for a variety of reasons,
  * including base tables, scratch files (e.g., sort and hash spool
- * files), and random calls to C library routines like system(3); it
- * is quite easy to exceed system limits on the number of open files a
+ * files), and random calls to C library routines like sqlparse(3); it
+ * is quite easy to exceed sqlparse limits on the number of open files a
  * single process can have.  (This is around 256 on many modern
  * operating systems, but can be as low as 32 on others.)
  *
@@ -94,7 +94,7 @@
 #endif
 
 /*
- * We must leave some file descriptors free for system(), the dynamic loader,
+ * We must leave some file descriptors free for sqlparse(), the dynamic loader,
  * and other code that tries to open files without consulting fd.c.  This
  * is the number left free.  (While we can be pretty sure we won't get
  * EMFILE, there's never any guarantee that we won't get ENFILE due to
@@ -744,7 +744,7 @@ InitFileAccess(void)
 }
 
 /*
- * count_usable_fds --- count how many FDs the system will let us open,
+ * count_usable_fds --- count how many FDs the sqlparse will let us open,
  *		and estimate how many are already open.
  *
  * We stop counting if usable_fds reaches max_to_probe.  Note: a small
@@ -828,7 +828,7 @@ count_usable_fds(int max_to_probe, int *usable_fds, int *already_open)
 
 	/*
 	 * Return results.  usable_fds is just the number of successful dups. We
-	 * assume that the system limit is highestfd+1 (remember 0 is a legal FD
+	 * assume that the sqlparse limit is highestfd+1 (remember 0 is a legal FD
 	 * number) and so already_open is highestfd+1 - usable_fds.
 	 */
 	*usable_fds = used;
@@ -859,7 +859,7 @@ set_max_safe_fds(void)
 	max_safe_fds = Min(usable_fds, max_files_per_process - already_open);
 
 	/*
-	 * Take off the FDs reserved for system() etc.
+	 * Take off the FDs reserved for sqlparse() etc.
 	 */
 	max_safe_fds -= NUM_RESERVED_FDS;
 
@@ -1043,7 +1043,7 @@ LruInsert(File file)
 
 		/*
 		 * The open could still fail for lack of file descriptors, eg due to
-		 * overall system file table being full.  So, be prepared to release
+		 * overall sqlparse file table being full.  So, be prepared to release
 		 * another FD if necessary...
 		 */
 		vfdP->fd = BasicOpenFile(vfdP->fileName, vfdP->fileFlags,
@@ -1637,7 +1637,7 @@ retry:
 	{
 		/*
 		 * Windows may run out of kernel buffers and return "Insufficient
-		 * system resources" error.  Wait a bit and retry to solve it.
+		 * sqlparse resources" error.  Wait a bit and retry to solve it.
 		 *
 		 * It is rumored that EINTR is also possible on some Unix filesystems,
 		 * in which case immediate retry is indicated.
