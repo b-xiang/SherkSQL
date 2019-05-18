@@ -1,0 +1,21 @@
+#ifndef SERVER_SHERK_SYSTEM_INCLUDE_CONST_LOGLEVEL_H
+#define SERVER_SHERK_SYSTEM_INCLUDE_CONST_LOGLEVEL_H
+
+extern const int LOGCLERK_LOG_LEVEL_DEBUG;
+extern const int LOGCLERK_LOG_LEVEL_ERROR;
+extern const int LOGCLERK_LOG_LEVEL_ACCESS;
+extern const int LOGCLERK_LOG_LEVEL_SQL_QUERY;
+extern const int LOGCLERK_LOG_LEVEL_SQL_SLOW;
+extern const int LOGCLERK_LOG_LEVEL_SQL_BIN;
+
+
+// 建库SQL
+extern const int SQL_TYPE_IS_CREATE_DATABASE = 1;
+
+// 删库SQL
+extern const int SQL_TYPE_IS_DROP_DATABASE = 2;
+
+
+extern const int SQL_TYPE_IS_CREATE_TABLE = 3;
+
+#endif
