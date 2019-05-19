@@ -4,6 +4,7 @@
 #include <SherkEngine/src/module/executor/executor.h>
 #include <SherkMechanism/src/module/administrator/administrator.h>
 #include <memory.h>
+#include <SherkSupport/src/vendor/encrypter/encrypter.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -90,6 +91,8 @@ int parser_match(char *sql) {
 
 }
 
+int lvsi_v ;
+
 /**
  * 执行解析
  * @param sql
@@ -97,9 +100,14 @@ int parser_match(char *sql) {
  */
 char *parser_exec(char *sql) {
 
+    ++lvsi_v;
+
+    printf("lvsi_v: %d \n", lvsi_v);
+
     parser_match(sql);
 
-    return "创建数据库成功";
+    encrypter_md5("ss");
+    return "";
 }
 
 /**
