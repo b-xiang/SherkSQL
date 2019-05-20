@@ -1,15 +1,27 @@
 #include <stdio.h>
 #include <regex.h>
-#include <SherkSQL/src/include/const/sql_type.h>
-#include <SherkEngine/src/module/executor/executor.h>
 #include <SherkMechanism/src/module/administrator/administrator.h>
 #include <memory.h>
-#include <SherkSupport/src/vendor/encrypter/encrypter.h>
+#include <SherkMechanism/src/include/define/const.h>
+#include <SherkSQL/src/module/interviewer/interviewer.h>
+#include <SherkMechanism/src/module/grocery/grocery.h>
+#include <SherkMechanism/src/module/variable_master/variable_master.h>
 
 // 解析原理 : 正则 + 解析树
 
+const int SQL_MAX_PATTRENS = 100;
+
+const int SQL_CATEGORY_IS_SHERK_COMMAND = 1;
+const int SQL_CATEGORY_IS_SQL = 2;
+
+const int SQL_TYPE_IS_CREATE_DATABASE = 3;
+const int SQL_TYPE_IS_CREATE_TABLE = 4;
+
+const int SQL_TYPE_IS_DROP_DATABASE = 5;
+
+
 /**
- * 匹配每一个正则
+ * 匹配正则
  * @param pattern
  * @param sql
  * @return
@@ -33,65 +45,52 @@ int parser_match_regex(const char *pattern, const char *sql) {
 }
 
 /**
- * 解析SQL类型
- * @param sql_type
+ * 分析SQL分类
  */
-void parser_analysis_sql_type(int sql_type){
+int parser_analysis_sql_category(char *sql) {
 
-    switch (sql_type) {
+    char *pattern_command = "^\\s*command=.*$";
+    char *pattern_sql = "^\\s*sql=.*$";
 
-        case SQL_TYPE_IS_CREATE_DATABASE:
-            break;
-        case SQL_TYPE_IS_DROP_DATABASE:
-            break;
+    if (parser_match_regex(pattern_command, sql)) {
 
-        case SQL_TYPE_IS_CREATE_TABLE:
-            break;
+        return SQL_CATEGORY_IS_SHERK_COMMAND;
+    } else if (parser_match_regex(pattern_sql, sql)) {
 
-        default:
-            break;
+        return SQL_CATEGORY_IS_SQL;
+    } else {
+
+        return -1;
     }
-
-
 }
 
-
 /**
- * 生成执行计划
- */
-void parser_make_execution_plan(){
-
-}
-
-
-/**
- * 解析器开始匹配
+ * 解析匹配SQL
  * @param sql
  * @return
  */
-int parser_match(char *sql) {
+char *parser_match_sql(char *sql) {
 
-    char *pattrens = {
-
-            "^\\s+CREATE\\s+DATABASE\\s+.+$", // 建库语句
-            "^\\s+DROP\\s+DATABASE\\s+.+$", // 删库语句
-
-            "", // 建表语句
-            "^\\s+DROP\\s+TABLE\\s+.+$", // 删表语句
-
-            "^\\s+DELETE\\s+FROM\\s+.+$", // 清空表数据
-
-            "^\\s+TRUNCATE\\s+FROM\\s+.+$", // 截断表的全部数据
-    };
-
-
-    // 循环匹配 pattrens, 匹配成功则退出
-    int sql_type;
-    parser_analysis_sql_type(sql_type);
-
+    return "";
 }
 
-int lvsi_v ;
+/**
+ * 解析匹配Sherk命令
+ * @param command
+ * @return
+ */
+char *parser_match_command(char *command) {
+
+    // 解析 sherk command 命令
+    char *s = grocery_string_cutwords(command,8,13);
+
+    if( 0 == strcmp("login", s) ){
+
+
+    }
+
+    return "";
+}
 
 /**
  * 执行解析
@@ -100,27 +99,27 @@ int lvsi_v ;
  */
 char *parser_exec(char *sql) {
 
-    ++lvsi_v;
+    grocery_string_tolower(sql);
 
-    printf("lvsi_v: %d \n", lvsi_v);
+    // 分析SQL的类型
+    int sql_category = parser_analysis_sql_category(sql);
 
-    parser_match(sql);
+    // 让 variable_master 去记忆SQL
+    interviewer_call_variable_master_memory_sql(sql, sql_category);
 
-    encrypter_md5("ss");
-    return "";
+    if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
+
+        return parser_match_command(sql);
+    } else if (SQL_CATEGORY_IS_SQL == sql_category) {
+
+        return parser_match_sql(sql);
+    } else {
+
+        return "Illegal SQL, Parse Error !\n";
+    }
 }
 
 /**
- * 解析器初始化
- * @return
+ * 生成执行计划
  */
-int parser_init() {
-
-    /*例子: const char *pattern = "^3w.*cd$";
-    const char *sql = "3w     cd";
-    printf("匹配的结果是 : %d \n" , matchRegex(pattern, sql));*/
-}
-
-
-
-
+void parser_make_execution_plan() {}

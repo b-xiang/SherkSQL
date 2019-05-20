@@ -1,8 +1,16 @@
 #ifndef SERVER_SHERK_SQL_MODULE_PARSER_H
 #define SERVER_SHERK_SQL_MODULE_PARSER_H
 
-extern int parser_init();
+extern const int SQL_MAX_PATTRENS;
 
-extern char* parser_exec(char *sql);
+extern const int SQL_CATEGORY_IS_SHERK_COMMAND;
+extern const int SQL_CATEGORY_IS_SQL;
+
+extern const int SQL_TYPE_IS_CREATE_DATABASE;
+extern const int SQL_TYPE_IS_CREATE_TABLE;
+
+extern const int SQL_TYPE_IS_DROP_DATABASE;
+
+extern char *parser_exec(char *sql);
 
 #endif
