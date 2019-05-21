@@ -11,6 +11,8 @@ extern const int SQL_TYPE_IS_CREATE_TABLE;
 
 extern const int SQL_TYPE_IS_DROP_DATABASE;
 
+extern int parser_match_regex(const char *pattern, const char *sql);
+
 extern char *parser_exec(char *sql);
 
 #endif

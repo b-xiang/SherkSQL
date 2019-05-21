@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include <SherkMechanism/src/module/variable_master/variable_master.h>
-#include <SherkSystem/src/module/logclerk/logclerk.h>
-#include <SherkSystem/src/include/const/log_level.h>
+#include <SherkService/mechanism/module/variable_master/variable_master.h>
+#include <SherkService/system/include/const/log_level.h>
+#include <SherkService/system/module/logclerk/logclerk.h>
 
 
 extern Variable_Master_Session_Variables variable_master_session_variables;

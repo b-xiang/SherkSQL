@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <regex.h>
-#include <SherkMechanism/src/module/administrator/administrator.h>
 #include <memory.h>
-#include <SherkMechanism/src/include/define/const.h>
 #include <SherkSQL/src/module/interviewer/interviewer.h>
-#include <SherkMechanism/src/module/grocery/grocery.h>
-#include <SherkMechanism/src/module/variable_master/variable_master.h>
+#include <SherkSQL/src/module/analyst/analyst.h>
+#include <stdlib.h>
+#include <SherkEngine/src/module/executor/executor.h>
+#include <SherkService/mechanism/module/grocery/grocery.h>
+#include <SherkService/test/module/test_variable/test_variable.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -37,31 +38,12 @@ int parser_match_regex(const char *pattern, const char *sql) {
 
         if (REG_NOMATCH != reti) {
 
-            result = 1;
+            result = 1; // 匹配到
         }
     }
+    // printf("匹配, patter:%s, sql:%s, result:%d\n", pattern, sql, result);
     regfree(&regex);
     return result;
-}
-
-/**
- * 分析SQL分类
- */
-int parser_analysis_sql_category(char *sql) {
-
-    char *pattern_command = "^\\s*command=.*$";
-    char *pattern_sql = "^\\s*sql=.*$";
-
-    if (parser_match_regex(pattern_command, sql)) {
-
-        return SQL_CATEGORY_IS_SHERK_COMMAND;
-    } else if (parser_match_regex(pattern_sql, sql)) {
-
-        return SQL_CATEGORY_IS_SQL;
-    } else {
-
-        return -1;
-    }
 }
 
 /**
@@ -70,6 +52,21 @@ int parser_analysis_sql_category(char *sql) {
  * @return
  */
 char *parser_match_sql(char *sql) {
+
+    char *show_variables_pattern = "^\\s*show variables.*$";
+    char *create_database_pattern = "^\\s*create database .*$";
+    char *res = (char*)malloc(sizeof(char)*100);
+
+    if(parser_match_regex(show_variables_pattern, sql)){
+
+        test_variable_print_variable();
+    }else if( parser_match_regex(create_database_pattern, sql) ){
+
+        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
+        executor_handle_sql_create_database(database_name);
+        sprintf(res, "Create %s Database Success.\n", database_name);
+        return res;
+    }
 
     return "";
 }
@@ -82,11 +79,13 @@ char *parser_match_sql(char *sql) {
 char *parser_match_command(char *command) {
 
     // 解析 sherk command 命令
-    char *s = grocery_string_cutwords(command,8,13);
+    char *s = grocery_string_cutwords(command,0,4);
 
     if( 0 == strcmp("login", s) ){
 
-
+        char *name = analyst_analysis_command_login_get_name(command);
+        char *password = analyst_analysis_command_login_get_password(command);
+        executor_handle_command_login(name, password);
     }
 
     return "";
@@ -102,17 +101,20 @@ char *parser_exec(char *sql) {
     grocery_string_tolower(sql);
 
     // 分析SQL的类型
-    int sql_category = parser_analysis_sql_category(sql);
+    int sql_category = analyst_analysis_sql_category(sql);
 
     // 让 variable_master 去记忆SQL
     interviewer_call_variable_master_memory_sql(sql, sql_category);
 
+    // 分类不同的SQL
     if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
 
-        return parser_match_command(sql);
+        // SQL 是 Sherk Command: command=
+        return parser_match_command(&sql[8]);
     } else if (SQL_CATEGORY_IS_SQL == sql_category) {
 
-        return parser_match_sql(sql);
+        // SQL 是 SQL 命令: sql=
+        return parser_match_sql(&sql[4]);
     } else {
 
         return "Illegal SQL, Parse Error !\n";
