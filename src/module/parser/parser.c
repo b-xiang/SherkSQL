@@ -7,6 +7,7 @@
 #include <SherkEngine/src/module/executor/executor.h>
 #include <SherkService/mechanism/module/grocery/grocery.h>
 #include <SherkService/test/module/test_variable/test_variable.h>
+#include <SherkService/mechanism/include/define/const.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -55,16 +56,24 @@ char *parser_match_sql(char *sql) {
 
     char *show_variables_pattern = "^\\s*show variables.*$";
     char *create_database_pattern = "^\\s*create database .*$";
-    char *res = (char*)malloc(sizeof(char)*100);
+    char *drop_database_pattern = "^\\s*drop database .*$";
+    char *res = (char *) malloc(sizeof(char) * CONST_RESPONSE_SIZE);
+    memset(res, '\0', sizeof(char) * CONST_RESPONSE_SIZE);
 
-    if(parser_match_regex(show_variables_pattern, sql)){
+    if (parser_match_regex(show_variables_pattern, sql)) {
 
         test_variable_print_variable();
-    }else if( parser_match_regex(create_database_pattern, sql) ){
+    } else if (parser_match_regex(create_database_pattern, sql)) {
 
         char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
         executor_handle_sql_create_database(database_name);
         sprintf(res, "Create %s Database Success.\n", database_name);
+        return res;
+    } else if (parser_match_regex(drop_database_pattern, sql)) {
+
+        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
+        executor_handle_sql_drop_database(database_name);
+        sprintf(res, "Drop %s Database Success.\n", database_name);
         return res;
     }
 
@@ -79,13 +88,14 @@ char *parser_match_sql(char *sql) {
 char *parser_match_command(char *command) {
 
     // 解析 sherk command 命令
-    char *s = grocery_string_cutwords(command,0,4);
+    char *s = grocery_string_cutwords(command, 0, 4);
 
-    if( 0 == strcmp("login", s) ){
+    if (0 == strcmp("login", s)) {
 
         char *name = analyst_analysis_command_login_get_name(command);
         char *password = analyst_analysis_command_login_get_password(command);
         executor_handle_command_login(name, password);
+        return "Login Success !"; // 必须有响应, 否则network不会send, 程序就会死循环
     }
 
     return "";
