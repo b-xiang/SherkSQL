@@ -54,30 +54,66 @@ int parser_match_regex(const char *pattern, const char *sql) {
  */
 char *parser_match_sql(char *sql) {
 
+    // use 数据库名;
+    char *use_database_pattern = "^\\s*use\\s+.+$";
+
+    // show variables;
     char *show_variables_pattern = "^\\s*show variables.*$";
+
+    // create database 数据库名
     char *create_database_pattern = "^\\s*create database .*$";
+    // drop database 数据库名
     char *drop_database_pattern = "^\\s*drop database .*$";
+
+    // create table 数据表名(
+    //
+    //     id   INT,
+    //     name INT,
+    //     age  INT
+    // );
+    char *create_table_pattern = "";
+
+    // drop table 数据表名
+    char *drop_table_pattern = "^\\s*drop table .*$";
+
     char *res = (char *) malloc(sizeof(char) * CONST_RESPONSE_SIZE);
     memset(res, '\0', sizeof(char) * CONST_RESPONSE_SIZE);
 
-    if (parser_match_regex(show_variables_pattern, sql)) {
+    if(parser_match_regex(use_database_pattern, sql)){
+
+        char *database_name = analyst_analysis_sql_use_database_get_database_name(sql);
+        executor_handle_sql_use_database(database_name);
+        sprintf(res, "Database Change to %s Success.\n", database_name);
+    }else if (parser_match_regex(show_variables_pattern, sql)) {
 
         test_variable_print_variable();
+        strcpy(res, "Show Variables Success.\n");
     } else if (parser_match_regex(create_database_pattern, sql)) {
 
         char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
         executor_handle_sql_create_database(database_name);
         sprintf(res, "Create %s Database Success.\n", database_name);
-        return res;
     } else if (parser_match_regex(drop_database_pattern, sql)) {
 
         char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
         executor_handle_sql_drop_database(database_name);
         sprintf(res, "Drop %s Database Success.\n", database_name);
-        return res;
+    } else if (parser_match_regex(create_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_create_table_get_table_name(sql);
+
+        char **field_name_list = analyst_analysis_sql_create_table_get_field_name_list(sql);
+        int **field_type_list = analyst_analysis_sql_create_table_get_field_type_list(sql);
+        executor_handle_sql_create_table(table_name, field_name_list, field_type_list);
+        sprintf(res, "Create %s Table Success.\n", table_name);
+    } else if (parser_match_regex(drop_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_drop_table_get_table_name(sql);
+        executor_handle_sql_drop_table(table_name);
+        sprintf(res, "Drop %s Table Success.\n", table_name);
     }
 
-    return "";
+    return res;
 }
 
 /**
