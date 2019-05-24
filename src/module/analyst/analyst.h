@@ -15,8 +15,10 @@ extern char *analyst_analysis_sql_drop_table_get_table_name(char *command);
 
 extern char *analyst_analysis_sql_create_table_get_table_name(char *command);
 
+extern char *analyst_analysis_sql_desc_table_get_table_name(char *command);
+
 extern char **analyst_analysis_sql_create_table_get_field_name_list(char *command);
 
-extern int **analyst_analysis_sql_create_table_get_field_type_list(char *command);
+extern int *analyst_analysis_sql_create_table_get_field_type_list(char *command);
 
 #endif

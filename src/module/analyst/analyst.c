@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <SherkSQL/src/module/parser/parser.h>
 #include <SherkService/mechanism/module/grocery/grocery.h>
+#include <SherkSupport/src/module/skeleton/skeleton.h>
+
 
 // 分析家
 
@@ -46,8 +49,7 @@ char *analyst_analysis_command_login_get_password(char *command) {
 
 char *analyst_analysis_sql_use_database_get_database_name(char *command) {
 
-    char *pos = grocery_string_get_str_next_char_address(command, "database ", 1);
-
+    char *pos = grocery_string_get_str_next_not_white_char_address(command, "use ", 1);
     return pos;
 }
 
@@ -72,10 +74,32 @@ char *analyst_analysis_sql_create_table_get_table_name(char *command) {
     return pos;
 }
 
-char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
+char *analyst_analysis_sql_desc_table_get_table_name(char *command) {
 
+    char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+
+    return pos;
 }
 
-int **analyst_analysis_sql_create_table_get_field_type_list(char *command) {
+char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
+
+    char **field_name_list = (char**)malloc(sizeof(char*)*3);
+
+    field_name_list[0] = "name";
+    field_name_list[1] = "age";
+    field_name_list[2] = "sex";
+
+    return field_name_list;
+}
+
+int *analyst_analysis_sql_create_table_get_field_type_list(char *command) {
+
+    int *field_type_list = (int*)malloc(sizeof(int)*3);
+
+    field_type_list[0] = FIELD_TYPE_STRING;
+    field_type_list[1] = FIELD_TYPE_INT;
+    field_type_list[2] = FIELD_TYPE_STRING;
+
+    return field_type_list;
 }
