@@ -16,7 +16,10 @@ int analyst_analysis_sql_category(char *sql) {
     char *pattern_command = "^\\s*command=.*$";
     char *pattern_sql = "^\\s*sql=.*$";
 
-    if (parser_match_regex(pattern_command, sql)) {
+    if (0 == strcmp("sql=sherk", grocery_string_cutwords(sql, 0, 8))) {
+
+        return SQL_CATEGORY_IS_SHERK_COMMAND_IN_SQL;
+    } else if (parser_match_regex(pattern_command, sql)) {
 
         // 传来的SQL是command
         return SQL_CATEGORY_IS_SHERK_COMMAND;
@@ -81,10 +84,24 @@ char *analyst_analysis_sql_desc_table_get_table_name(char *command) {
     return pos;
 }
 
+char *analyst_analysis_sql_desc_table_field_get_table_name(char *command) {
+
+    char *pos = grocery_string_get_str_next_char_address(command, "field ", 1);
+
+    return pos;
+}
+
+char *analyst_analysis_sql_select_table_get_table_name(char *command) {
+
+    char *pos = grocery_string_get_str_next_char_address(command, "select ", 1);
+
+    return pos;
+}
+
 char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
 
-    char **field_name_list = (char**)malloc(sizeof(char*)*3);
+    char **field_name_list = (char **) malloc(sizeof(char *) * 3);
 
     field_name_list[0] = "name";
     field_name_list[1] = "age";
@@ -95,7 +112,7 @@ char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
 int *analyst_analysis_sql_create_table_get_field_type_list(char *command) {
 
-    int *field_type_list = (int*)malloc(sizeof(int)*3);
+    int *field_type_list = (int *) malloc(sizeof(int) * 3);
 
     field_type_list[0] = FIELD_TYPE_STRING;
     field_type_list[1] = FIELD_TYPE_INT;

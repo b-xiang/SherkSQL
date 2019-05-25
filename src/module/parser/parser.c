@@ -9,6 +9,8 @@
 #include <SherkService/test/module/test_variable/test_variable.h>
 #include <SherkService/mechanism/include/define/const.h>
 #include <SherkService/mechanism/include/define/rescode.h>
+#include <SherkService/test/module/test_network/test_network.h>
+#include <SherkService/test/module/automated_test/automated_test.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -16,6 +18,7 @@ const int SQL_MAX_PATTRENS = 100;
 
 const int SQL_CATEGORY_IS_SHERK_COMMAND = 1;
 const int SQL_CATEGORY_IS_SQL = 2;
+const int SQL_CATEGORY_IS_SHERK_COMMAND_IN_SQL = 3;
 
 const int SQL_TYPE_IS_CREATE_DATABASE = 3;
 const int SQL_TYPE_IS_CREATE_TABLE = 4;
@@ -49,28 +52,50 @@ int parser_match_regex(const char *pattern, const char *sql) {
 }
 
 /**
- * 解析匹配SQL
+ * 解析匹配与查看系统相关的SQL
  * @param sql
  * @return
  */
-char *parser_match_sql(char *sql) {
-
-    // show databases
-    char *show_databases_pattern = "^\\s*show databases.*$";
+int parser_match_sql_show_system(char *sql, char *res) {
 
     // show tables
     char *show_tables_pattern = "^\\s*show tables.*$";
 
-    // use 数据库名;
-    char *use_database_pattern = "^\\s*use.+$"; // "^\s*use\s+.+$" - 这样写匹配不到,  "^\\s*use.+$" - 这样写可以匹配到
-
     // show variables;
     char *show_variables_pattern = "^\\s*show variables.*$";
 
-    // create database 数据库名
-    char *create_database_pattern = "^\\s*create database .*$";
-    // drop database 数据库名
-    char *drop_database_pattern = "^\\s*drop database .*$";
+    // show network;
+    char *show_network_pattern = "^\\s*show network.*$";
+
+    // 匹配 SQL: show variables
+    if (parser_match_regex(show_variables_pattern, sql)) {
+
+        test_variable_print_variable();
+        sprintf(res, "Show Variables Success.\n");
+
+        return 1;
+    }
+        // 匹配 SQL: show network
+    else if (parser_match_regex(show_network_pattern, sql)) {
+
+        test_network_print_network_directly();
+        sprintf(res, "Show Network Success.\n");
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * 解析匹配与表相关的SQL
+ * @param sql
+ * @return
+ */
+int parser_match_sql_table(char *sql, char *res) {
+
+    // show tables
+    char *show_tables_pattern = "^\\s*show tables.*$";
 
     // create table 数据表名(
     //
@@ -78,25 +103,23 @@ char *parser_match_sql(char *sql) {
     //     name INT,
     //     age  INT
     // );
+    // ^create\s+table\s+.+\s*\((\s+.+\s+(int|float|char|string)\s+,)+\)$
     char *create_table_pattern = "^\\s*create table .*$";
 
     // desc table 数据表名
     char *desc_table_pattern = "^\\s*desc table .*$";
 
+    // desc table field 数据表名
+    char *desc_table_field_pattern = "^\\s*desc table field .*$";
+
     // drop table 数据表名
     char *drop_table_pattern = "^\\s*drop table .*$";
 
-    char *res = (char *) malloc(sizeof(char) * CONST_RESPONSE_SIZE);
-    memset(res, '\0', sizeof(char) * CONST_RESPONSE_SIZE);
+    // select table
+    char *select_table_pattern = "^select.*$";
 
-    // 匹配 SQL: show databases
-    if (parser_match_regex(show_databases_pattern, sql)) {
-
-        executor_handle_sql_show_databases();
-        sprintf(res, "Show Databases Success.\n");
-    }
-        // 匹配 SQL: show tables
-    else if (parser_match_regex(show_tables_pattern, sql)) {
+    // 匹配 SQL: show tables
+    if (parser_match_regex(show_tables_pattern, sql)) {
 
         if (RES_OK != executor_handle_sql_show_tables()) {
 
@@ -104,50 +127,8 @@ char *parser_match_sql(char *sql) {
         } else {
             sprintf(res, "Show Tables Success.\n");
         };
-    }
-        // 匹配 SQL: use database
-    else if (parser_match_regex(use_database_pattern, sql)) {
 
-        char *database_name = analyst_analysis_sql_use_database_get_database_name(sql);
-        executor_handle_sql_use_database(database_name);
-        sprintf(res, "Database Change to %s Success.\n", database_name);
-    }
-        // 匹配 SQL: show variables
-    else if (parser_match_regex(show_variables_pattern, sql)) {
-
-        test_variable_print_variable();
-        sprintf(res, "Show Variables Success.\n");
-    }
-        // 匹配 SQL: create database
-    else if (parser_match_regex(create_database_pattern, sql)) {
-
-        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
-        executor_handle_sql_create_database(database_name);
-        sprintf(res, "Create %s Database Success.\n", database_name);
-    }
-        // 匹配 SQL: drop database
-    else if (parser_match_regex(drop_database_pattern, sql)) {
-
-        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
-        executor_handle_sql_drop_database(database_name);
-        sprintf(res, "Drop %s Database Success.\n", database_name);
-    }
-
-        // 匹配 SQL: desc table
-    else if (parser_match_regex(desc_table_pattern, sql)) {
-
-        char *table_name = analyst_analysis_sql_desc_table_get_table_name(sql);
-        int desc_table_code = executor_handle_sql_desc_table(table_name);
-
-        if (1 == desc_table_code) {
-
-            sprintf(res, "Please Use Database Firstly.\n");
-        } else if (2 == desc_table_code) {
-
-            sprintf(res, "This Table Not Exists.\n");
-        } else {
-            sprintf(res, "Desc Table Success.\n");
-        }
+        return 1;
     }
         // 匹配 SQL: create table
     else if (parser_match_regex(create_table_pattern, sql)) {
@@ -178,6 +159,8 @@ char *parser_match_sql(char *sql) {
 
             sprintf(res, "Create %s Table Success.\n", table_name);
         }
+
+        return 1;
     }
         // 匹配 SQL: drop table
     else if (parser_match_regex(drop_table_pattern, sql)) {
@@ -185,12 +168,157 @@ char *parser_match_sql(char *sql) {
         char *table_name = analyst_analysis_sql_drop_table_get_table_name(sql);
         executor_handle_sql_drop_table(table_name);
         sprintf(res, "Drop %s Table Success.\n", table_name);
-    } else {
 
-        sprintf(res, "Illegal SQL, Parse Error !\n");
+        return 1;
     }
 
-    return res;
+        // 匹配 SQL: desc table field (必须先匹配 desc table field, 后匹配 desc table)
+    else if (parser_match_regex(desc_table_field_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_desc_table_field_get_table_name(sql);
+        int desc_table_code = executor_handle_sql_desc_table_field(table_name);
+
+        if (1 == desc_table_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == desc_table_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Desc Table Field Success.\n");
+        }
+
+        return 1;
+    }
+
+        // 匹配 SQL: desc table (必须先匹配 desc table field, 后匹配 desc table)
+    else if (parser_match_regex(desc_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_desc_table_get_table_name(sql);
+        int desc_table_code = executor_handle_sql_desc_table(table_name);
+
+        if (1 == desc_table_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == desc_table_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Desc Table Success.\n");
+        }
+
+        return 1;
+    }
+
+        // 匹配 SQL: select table
+    else if (parser_match_regex(select_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_select_table_get_table_name(sql);
+        int select_table_code = executor_handle_sql_select_table(table_name);
+
+        if (1 == select_table_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == select_table_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Desc Table Success.\n");
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * 解析匹配与数据库相关的SQL
+ * @param sql
+ * @return
+ */
+int parser_match_sql_database(char *sql, char *res) {
+
+    // show databases
+    char *show_databases_pattern = "^\\s*show databases.*$";
+
+    // use 数据库名;
+    char *use_database_pattern = "^\\s*use.+$"; // "^\s*use\s+.+$" - 这样写匹配不到,  "^\\s*use.+$" - 这样写可以匹配到
+
+    // create database 数据库名
+    char *create_database_pattern = "^\\s*create database .*$";
+
+    // drop database 数据库名
+    char *drop_database_pattern = "^\\s*drop database .*$";
+
+
+    // 匹配 SQL: show databases
+    if (parser_match_regex(show_databases_pattern, sql)) {
+
+        executor_handle_sql_show_databases();
+        sprintf(res, "Show Databases Success.\n");
+
+        return 1;
+    }
+        // 匹配 SQL: use database
+    else if (parser_match_regex(use_database_pattern, sql)) {
+
+        char *database_name = analyst_analysis_sql_use_database_get_database_name(sql);
+        executor_handle_sql_use_database(database_name);
+        sprintf(res, "Database Change to %s Success.\n", database_name);
+
+        return 1;
+    }
+        // 匹配 SQL: create database
+    else if (parser_match_regex(create_database_pattern, sql)) {
+
+        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
+        executor_handle_sql_create_database(database_name);
+        sprintf(res, "Create %s Database Success.\n", database_name);
+
+        return 1;
+    }
+        // 匹配 SQL: drop database
+    else if (parser_match_regex(drop_database_pattern, sql)) {
+
+        char *database_name = analyst_analysis_sql_create_database_get_database_name(sql);
+        executor_handle_sql_drop_database(database_name);
+        sprintf(res, "Drop %s Database Success.\n", database_name);
+
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * 解析匹配SQL
+ * @param sql
+ * @return
+ */
+char *parser_match_sql(char *sql) {
+
+    char *res = (char *) malloc(sizeof(char) * CONST_RESPONSE_SIZE);
+    memset(res, '\0', sizeof(char) * CONST_RESPONSE_SIZE);
+
+    // 登录判断
+
+    // 匹配与数据表相关的SQL
+    if (parser_match_sql_table(sql, res)) {
+
+        return res;
+    }
+        // 匹配与数据库相关的SQL
+    else if (parser_match_sql_database(sql, res)) {
+
+        return res;
+    }
+        // 匹配与查看系统相关的SQL
+    else if (parser_match_sql_show_system(sql, res)) {
+
+        return res;
+    } else {
+
+        return "Illegal SQL, Parse Error !\n";
+    }
 }
 
 /**
@@ -200,15 +328,22 @@ char *parser_match_sql(char *sql) {
  */
 char *parser_match_command(char *command) {
 
-    // 解析 sherk command 命令
+    // 解析 sherk login 命令
     char *s = grocery_string_cutwords(command, 0, 4);
-
     if (0 == strcmp("login", s)) {
 
         char *name = analyst_analysis_command_login_get_name(command);
         char *password = analyst_analysis_command_login_get_password(command);
         executor_handle_command_login(name, password);
         return "Login Success !"; // 必须有响应, 否则network不会send, 程序就会死循环
+    }
+
+    // 解析 sherk test 命令
+    s = grocery_string_cutwords(command, 0, 3);
+    if (0 == strcmp("test", s)) {
+
+        automated_test_main();
+        return "Please check the results on the left side carefully !";
     }
 
     return "";
@@ -230,7 +365,12 @@ char *parser_exec(char *sql) {
     interviewer_call_variable_master_memory_sql(sql, sql_category);
 
     // 分类不同的SQL
-    if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
+    if(SQL_CATEGORY_IS_SHERK_COMMAND_IN_SQL == sql_category){
+
+        // SQL 是 Sherk Command In SQL: sql=sherk test
+        // 即转交给 parser_match_command 的时候, 它只接受 sherk (包括空格)后的命令, 如 test
+        return parser_match_command(&sql[10]);
+    }else if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
 
         // SQL 是 Sherk Command: command=
         return parser_match_command(&sql[8]);
