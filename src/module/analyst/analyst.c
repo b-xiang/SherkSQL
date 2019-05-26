@@ -93,7 +93,14 @@ char *analyst_analysis_sql_desc_table_field_get_table_name(char *command) {
 
 char *analyst_analysis_sql_select_table_get_table_name(char *command) {
 
-    char *pos = grocery_string_get_str_next_char_address(command, "select ", 1);
+    char *pos = grocery_string_get_str_next_char_address(command, "from ", 1);
+
+    return pos;
+}
+
+char *analyst_analysis_sql_select_table_part_get_table_name(char *command) {
+
+    char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
 
     return pos;
 }
@@ -103,9 +110,10 @@ char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
     char **field_name_list = (char **) malloc(sizeof(char *) * 3);
 
-    field_name_list[0] = "name";
-    field_name_list[1] = "age";
-    field_name_list[2] = "sex";
+    field_name_list[0] = "id";
+    field_name_list[1] = "name";
+    field_name_list[2] = "age";
+    field_name_list[3] = "sex";
 
     return field_name_list;
 }
@@ -114,9 +122,10 @@ int *analyst_analysis_sql_create_table_get_field_type_list(char *command) {
 
     int *field_type_list = (int *) malloc(sizeof(int) * 3);
 
-    field_type_list[0] = FIELD_TYPE_STRING;
-    field_type_list[1] = FIELD_TYPE_INT;
-    field_type_list[2] = FIELD_TYPE_STRING;
+    field_type_list[0] = FIELD_TYPE_INT;
+    field_type_list[1] = FIELD_TYPE_STRING;
+    field_type_list[2] = FIELD_TYPE_INT;
+    field_type_list[3] = FIELD_TYPE_STRING;
 
     return field_type_list;
 }

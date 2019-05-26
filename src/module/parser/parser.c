@@ -115,8 +115,20 @@ int parser_match_sql_table(char *sql, char *res) {
     // drop table 数据表名
     char *drop_table_pattern = "^\\s*drop table .*$";
 
-    // select table
-    char *select_table_pattern = "^select.*$";
+    // select * from 表名
+    char *select_table_pattern = "^\\s*select \\* from .*$";
+
+    // select table 数据表名
+    char *select_table_part_pattern = "^\\s*select table .*$";
+
+    // insert 数据表名
+    char *insert_table_pattern = "^\\s*insert table .*$";
+
+    // update 数据表名
+    char *update_table_pattern = "^\\s*update table .*$";
+
+    // delete 数据表名
+    char *delete_table_pattern = "^\\s*delete table .*$";
 
     // 匹配 SQL: show tables
     if (parser_match_regex(show_tables_pattern, sql)) {
@@ -210,7 +222,7 @@ int parser_match_sql_table(char *sql, char *res) {
         return 1;
     }
 
-        // 匹配 SQL: select table
+        // 匹配 SQL: select * from table
     else if (parser_match_regex(select_table_pattern, sql)) {
 
         char *table_name = analyst_analysis_sql_select_table_get_table_name(sql);
@@ -223,9 +235,34 @@ int parser_match_sql_table(char *sql, char *res) {
 
             sprintf(res, "This Table Not Exists.\n");
         } else {
-            sprintf(res, "Desc Table Success.\n");
+            sprintf(res, "Select Table Success.\n");
         }
+
+        return 1;
     }
+
+        // 匹配 SQL: select table 表名
+    else if (parser_match_regex(select_table_part_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_select_table_part_get_table_name(sql);
+
+        printf("\n实际执行SQL: select * from %s where id = 3",table_name);
+
+        int select_table_part_code = executor_handle_sql_select_table_part(table_name);
+
+        if (1 == select_table_part_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == select_table_part_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Select Table Success.\n");
+        }
+
+        return 1;
+    }
+
 
     return 0;
 }
@@ -338,11 +375,20 @@ char *parser_match_command(char *command) {
         return "Login Success !"; // 必须有响应, 否则network不会send, 程序就会死循环
     }
 
+    // 解析 sherk test clear 命令
+    s = grocery_string_cutwords(command, 0, 9);
+    if (0 == strcmp("test clear", s)) {
+
+        automated_test_main(1);
+        return "All test data have been cleared !";
+    }
+
     // 解析 sherk test 命令
     s = grocery_string_cutwords(command, 0, 3);
     if (0 == strcmp("test", s)) {
 
-        automated_test_main();
+        automated_test_main(1);
+        automated_test_main(0);
         return "Please check the results on the left side carefully !";
     }
 
@@ -365,12 +411,13 @@ char *parser_exec(char *sql) {
     interviewer_call_variable_master_memory_sql(sql, sql_category);
 
     // 分类不同的SQL
-    if(SQL_CATEGORY_IS_SHERK_COMMAND_IN_SQL == sql_category){
+    if (SQL_CATEGORY_IS_SHERK_COMMAND_IN_SQL == sql_category) {
 
         // SQL 是 Sherk Command In SQL: sql=sherk test
+        // 意思也就是在SQL交互环境中输入系统命令
         // 即转交给 parser_match_command 的时候, 它只接受 sherk (包括空格)后的命令, 如 test
         return parser_match_command(&sql[10]);
-    }else if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
+    } else if (SQL_CATEGORY_IS_SHERK_COMMAND == sql_category) {
 
         // SQL 是 Sherk Command: command=
         return parser_match_command(&sql[8]);
