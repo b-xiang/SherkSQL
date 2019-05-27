@@ -11,6 +11,7 @@
 #include <SherkService/mechanism/include/define/rescode.h>
 #include <SherkService/test/module/test_network/test_network.h>
 #include <SherkService/test/module/automated_test/automated_test.h>
+#include <SherkService/test/module/test_users/test_users.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -67,6 +68,9 @@ int parser_match_sql_show_system(char *sql, char *res) {
     // show network;
     char *show_network_pattern = "^\\s*show network.*$";
 
+    // show users;
+    char *show_users_pattern = "^\\s*show users.*$";
+
     // 匹配 SQL: show variables
     if (parser_match_regex(show_variables_pattern, sql)) {
 
@@ -80,6 +84,15 @@ int parser_match_sql_show_system(char *sql, char *res) {
 
         test_network_print_network_directly();
         sprintf(res, "Show Network Success.\n");
+
+        return 1;
+    }
+
+        // 匹配 SQL: show users
+    else if (parser_match_regex(show_users_pattern, sql)) {
+
+        test_users_print_users();
+        sprintf(res, "Show Users Success.\n");
 
         return 1;
     }
@@ -146,14 +159,25 @@ int parser_match_sql_table(char *sql, char *res) {
     else if (parser_match_regex(create_table_pattern, sql)) {
 
         char *table_name = analyst_analysis_sql_create_table_get_table_name(sql);
-        char **field_name_list = analyst_analysis_sql_create_table_get_field_name_list(sql);
-        int *field_type_list = analyst_analysis_sql_create_table_get_field_type_list(sql);
+
+        char **field_name_list;
+        int *field_type_list;
+
+        if (analyst_analysis_sql_is_create_sys_table(table_name)) {
+
+            field_name_list = analyst_analysis_sql_create_sys_table_get_field_name_list(sql, table_name);
+            field_type_list = analyst_analysis_sql_create_sys_table_get_field_type_list(sql, table_name);
+        } else {
+
+            field_name_list = analyst_analysis_sql_create_table_get_field_name_list(sql);
+            field_type_list = analyst_analysis_sql_create_table_get_field_type_list(sql);
+        }
 
         // for (int i = 0; i <= 2; ++i) { printf("%s----\n", field_name_list[i]); }
         // printf("-------------------------\n");
         // for (int i = 0; i <= 2; ++i) { printf("%d----\n", field_type_list[i]); }
 
-        int create_table_code = executor_handle_sql_create_table(table_name, field_name_list, field_type_list, 3);
+        int create_table_code = executor_handle_sql_create_table(table_name, field_name_list, field_type_list, 4);
 
         if (1 == create_table_code) {
 
@@ -246,7 +270,7 @@ int parser_match_sql_table(char *sql, char *res) {
 
         char *table_name = analyst_analysis_sql_select_table_part_get_table_name(sql);
 
-        printf("\n实际执行SQL: select * from %s where id = 3",table_name);
+        printf("\n实际执行SQL: select * from %s where id = 3", table_name);
 
         int select_table_part_code = executor_handle_sql_select_table_part(table_name);
 
@@ -258,6 +282,30 @@ int parser_match_sql_table(char *sql, char *res) {
             sprintf(res, "This Table Not Exists.\n");
         } else {
             sprintf(res, "Select Table Success.\n");
+        }
+
+        return 1;
+    }
+
+        // 匹配 SQL: insert table 表名
+    else if (parser_match_regex(insert_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_insert_table_get_table_name(sql);
+
+        printf("\n实际执行SQL: insert into %s (name) VALUES ('一个新人')", table_name);
+
+        char *record = analyst_analysis_sql_insert_table_get_record(sql);
+
+        int insert_table_code = executor_handle_sql_insert_table(table_name, record);
+
+        if (1 == insert_table_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == insert_table_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Insert Table Success.\n");
         }
 
         return 1;
@@ -383,16 +431,25 @@ char *parser_match_command(char *command) {
         return "All test data have been cleared !";
     }
 
+    // 解析 sherk test reload system 命令
+    s = grocery_string_cutwords(command, 0, 17);
+    if (0 == strcmp("test reload system", s)) {
+
+        automated_test_main(2);
+        return "System Has been Reload !";
+    }
+
     // 解析 sherk test 命令
     s = grocery_string_cutwords(command, 0, 3);
-    if (0 == strcmp("test", s)) {
+    if (0 == strcmp("test", s) && 0 == strcmp("test", &command[0])) {
 
         automated_test_main(1);
+        automated_test_main(2);
         automated_test_main(0);
         return "Please check the results on the left side carefully !";
     }
 
-    return "";
+    return "Illegal SQL, Parse Error !\n";
 }
 
 /**

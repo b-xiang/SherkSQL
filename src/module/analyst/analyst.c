@@ -4,9 +4,14 @@
 #include <SherkSQL/src/module/parser/parser.h>
 #include <SherkService/mechanism/module/grocery/grocery.h>
 #include <SherkSupport/src/module/skeleton/skeleton.h>
+#include <SherkService/mechanism/module/variable_master/variable_master.h>
+#include <SherkService/test/vendor/faker/faker.h>
 
 
 // 分析家
+
+extern Variable_Master_Session_Variables variable_master_session_variables;
+
 
 /**
  * 分析SQL分类
@@ -105,10 +110,24 @@ char *analyst_analysis_sql_select_table_part_get_table_name(char *command) {
     return pos;
 }
 
+char *analyst_analysis_sql_insert_table_get_table_name(char *command) {
+
+    char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+
+    return pos;
+}
+
+char *analyst_analysis_sql_insert_table_get_record(char *command) {
+
+    char *table_name = analyst_analysis_sql_insert_table_get_table_name(command);
+
+    return faker_simulate_a_record_json(10, table_name);
+}
+
 char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
 
-    char **field_name_list = (char **) malloc(sizeof(char *) * 3);
+    char **field_name_list = (char **) malloc(sizeof(char *) * 4);
 
     field_name_list[0] = "id";
     field_name_list[1] = "name";
@@ -120,12 +139,96 @@ char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
 
 int *analyst_analysis_sql_create_table_get_field_type_list(char *command) {
 
-    int *field_type_list = (int *) malloc(sizeof(int) * 3);
+    int *field_type_list = (int *) malloc(sizeof(int) * 4);
 
     field_type_list[0] = FIELD_TYPE_INT;
     field_type_list[1] = FIELD_TYPE_STRING;
     field_type_list[2] = FIELD_TYPE_INT;
     field_type_list[3] = FIELD_TYPE_STRING;
+
+    return field_type_list;
+}
+
+int analyst_analysis_sql_is_create_sys_table(char *table_name) {
+
+    // 必须写这个, 必须先判断database是否为空, 否则下面 strcmp 时程序会异常退出
+    if(NULL == variable_master_session_variables.database_vessel.database_name){
+
+        return 0;
+    }
+
+    // 先看当前所在 database 是不是 information_schema, 再看表名是不是 users, tables_manage, databases_manage
+    if (0 == strcmp("information_schema", variable_master_session_variables.database_vessel.database_name)) {
+
+        if (0 == strcmp("users", table_name)) {
+
+            return 1;
+        }
+
+        if (0 == strcmp("tables_manage", table_name)) {
+
+            return 1;
+        }
+
+        if (0 == strcmp("databases_manage", table_name)) {
+
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+char **analyst_analysis_sql_create_sys_table_get_field_name_list(char *command, char *table_name) {
+
+    char **field_name_list = (char **) malloc(sizeof(char *) * 4);
+
+    if (0 == strcmp("databases_manage", table_name)) {
+
+        field_name_list[0] = "id";
+        field_name_list[1] = "name";
+        field_name_list[2] = "time";
+        field_name_list[3] = "encryption";
+    } else if (0 == strcmp("tables_manage", table_name)) {
+
+        field_name_list[0] = "id";
+        field_name_list[1] = "name";
+        field_name_list[2] = "database";
+        field_name_list[3] = "time";
+    } else if (0 == strcmp("users", table_name)) {
+
+        field_name_list[0] = "id";
+        field_name_list[1] = "name";
+        field_name_list[2] = "password";
+        field_name_list[3] = "time";
+    }
+
+    return field_name_list;
+}
+
+int *analyst_analysis_sql_create_sys_table_get_field_type_list(char *command, char *table_name) {
+
+    int *field_type_list = (int *) malloc(sizeof(int) * 4);
+
+    if (0 == strcmp("databases_manage", table_name)) {
+
+        field_type_list[0] = FIELD_TYPE_INT;
+        field_type_list[1] = FIELD_TYPE_STRING;
+        field_type_list[2] = FIELD_TYPE_STRING;
+        field_type_list[3] = FIELD_TYPE_STRING;
+    } else if (0 == strcmp("tables_manage", table_name)) {
+
+        field_type_list[0] = FIELD_TYPE_INT;
+        field_type_list[1] = FIELD_TYPE_STRING;
+        field_type_list[2] = FIELD_TYPE_STRING;
+        field_type_list[3] = FIELD_TYPE_STRING;
+    } else if (0 == strcmp("users", table_name)) {
+
+        field_type_list[0] = FIELD_TYPE_INT;
+        field_type_list[1] = FIELD_TYPE_STRING;
+        field_type_list[2] = FIELD_TYPE_STRING;
+        field_type_list[3] = FIELD_TYPE_STRING;
+    }
 
     return field_type_list;
 }
