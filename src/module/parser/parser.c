@@ -292,7 +292,7 @@ int parser_match_sql_table(char *sql, char *res) {
 
         char *table_name = analyst_analysis_sql_insert_table_get_table_name(sql);
 
-        printf("\n实际执行SQL: insert into %s (name) VALUES ('一个新人')", table_name);
+        printf("\n实际执行SQL: insert into %s (name) VALUES (\"一个新人\")", table_name);
 
         char *record = analyst_analysis_sql_insert_table_get_record(sql);
 
@@ -306,6 +306,28 @@ int parser_match_sql_table(char *sql, char *res) {
             sprintf(res, "This Table Not Exists.\n");
         } else {
             sprintf(res, "Insert Table Success.\n");
+        }
+
+        return 1;
+    }
+
+        // 匹配 SQL: update table 表名
+    else if (parser_match_regex(update_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_insert_table_get_table_name(sql);
+
+        printf("\n实际执行SQL: update %s set name = \"name被修改了\", sex = \"sex被修改了\" where id = 4", table_name);
+
+        int update_table_code = executor_handle_sql_update_table(table_name);
+
+        if (1 == update_table_code) {
+
+            sprintf(res, "Please Use Database Firstly.\n");
+        } else if (2 == update_table_code) {
+
+            sprintf(res, "This Table Not Exists.\n");
+        } else {
+            sprintf(res, "Update Table Success.\n");
         }
 
         return 1;

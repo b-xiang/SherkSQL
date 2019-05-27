@@ -121,7 +121,14 @@ char *analyst_analysis_sql_insert_table_get_record(char *command) {
 
     char *table_name = analyst_analysis_sql_insert_table_get_table_name(command);
 
-    return faker_simulate_a_record_json(10, table_name);
+    return faker_simulate_a_record_json(6, table_name);
+}
+
+char *analyst_analysis_sql_insert_table_get_record_update(char *command) {
+
+    char *table_name = analyst_analysis_sql_insert_table_get_table_name(command);
+
+    return faker_simulate_a_record_update_json(6, table_name);
 }
 
 char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
