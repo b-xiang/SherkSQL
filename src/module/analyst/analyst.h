@@ -21,6 +21,8 @@ extern char *analyst_analysis_sql_desc_table_field_get_table_name(char *command)
 
 extern char *analyst_analysis_sql_select_table_part_get_table_name(char *command);
 
+extern char *analyst_analysis_sql_update_table_get_table_name(char *command);
+
 extern char *analyst_analysis_sql_insert_table_get_table_name(char *command);
 
 extern char *analyst_analysis_sql_insert_table_get_record(char *command);
@@ -28,6 +30,10 @@ extern char *analyst_analysis_sql_insert_table_get_record(char *command);
 extern char *analyst_analysis_sql_insert_table_get_record_update(char *command);
 
 extern char *analyst_analysis_sql_select_table_get_table_name(char *command);
+
+extern int analyst_analysis_field_type_by_field_type_string(char *field_type);
+
+extern int analyst_analysis_field_type_by_field_value_string(const char *field_value);
 
 extern char **analyst_analysis_sql_create_table_get_field_name_list(char *command);
 

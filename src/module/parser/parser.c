@@ -12,6 +12,8 @@
 #include <SherkService/test/module/test_network/test_network.h>
 #include <SherkService/test/module/automated_test/automated_test.h>
 #include <SherkService/test/module/test_users/test_users.h>
+#include <SherkSQL/src/module/extractor/extractor.h>
+#include <SherkSQL/src/module/builder/builder.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -135,10 +137,10 @@ int parser_match_sql_table(char *sql, char *res) {
     char *select_table_part_pattern = "^\\s*select table .*$";
 
     // insert 数据表名
-    char *insert_table_pattern = "^\\s*insert table .*$";
+    char *insert_table_pattern = "^\\s*insert into .*$";
 
     // update 数据表名
-    char *update_table_pattern = "^\\s*update table .*$";
+    char *update_table_pattern = "^\\s*update .*$";
 
     // delete 数据表名
     char *delete_table_pattern = "^\\s*delete table .*$";
@@ -159,25 +161,28 @@ int parser_match_sql_table(char *sql, char *res) {
     else if (parser_match_regex(create_table_pattern, sql)) {
 
         char *table_name = analyst_analysis_sql_create_table_get_table_name(sql);
-
-        char **field_name_list;
-        int *field_type_list;
+        char **field_name_list = (char **) malloc(sizeof(char **) * 100);
+        int *field_type_list = (int *) malloc(sizeof(int *) * 100);
+        int field_count = 0;
 
         if (analyst_analysis_sql_is_create_sys_table(table_name)) {
 
             field_name_list = analyst_analysis_sql_create_sys_table_get_field_name_list(sql, table_name);
             field_type_list = analyst_analysis_sql_create_sys_table_get_field_type_list(sql, table_name);
+            field_count = 4;
         } else {
 
-            field_name_list = analyst_analysis_sql_create_table_get_field_name_list(sql);
-            field_type_list = analyst_analysis_sql_create_table_get_field_type_list(sql);
+            //field_name_list = analyst_analysis_sql_create_table_get_field_name_list(sql);
+            //field_type_list = analyst_analysis_sql_create_table_get_field_type_list(sql);
+            extractor_extract_create_sql(sql, field_name_list, field_type_list, &field_count);
         }
 
         // for (int i = 0; i <= 2; ++i) { printf("%s----\n", field_name_list[i]); }
         // printf("-------------------------\n");
         // for (int i = 0; i <= 2; ++i) { printf("%d----\n", field_type_list[i]); }
 
-        int create_table_code = executor_handle_sql_create_table(table_name, field_name_list, field_type_list, 4);
+        int create_table_code = executor_handle_sql_create_table(table_name, field_name_list, field_type_list,
+                                                                 field_count);
 
         if (1 == create_table_code) {
 
@@ -292,9 +297,20 @@ int parser_match_sql_table(char *sql, char *res) {
 
         char *table_name = analyst_analysis_sql_insert_table_get_table_name(sql);
 
-        printf("\n实际执行SQL: insert into %s (name) VALUES (\"一个新人\")", table_name);
+        char **field_name_list = (char **) malloc(sizeof(char **) * 100);
+        int *field_type_list = (int *) malloc(sizeof(int *) * 100);
+        int *field_value_int = (int *) malloc(sizeof(int *) * 100);
+        float *field_value_float = (float *) malloc(sizeof(float *) * 100);
+        char *field_value_char = (char *) malloc(sizeof(char *) * 100);
+        char **field_value_string = (char **) malloc(sizeof(char **) * 100);
+        int field_count = 0;
 
-        char *record = analyst_analysis_sql_insert_table_get_record(sql);
+        extractor_extract_insert_sql(sql, &field_count, field_name_list, field_type_list, field_value_int,
+                                     field_value_float, field_value_char, field_value_string);
+
+        // char *record = analyst_analysis_sql_insert_table_get_record(sql);
+        char *record = builder_generate_record_json(field_count, field_name_list, field_type_list, field_value_int,
+                                                    field_value_float, field_value_char, field_value_string);
 
         int insert_table_code = executor_handle_sql_insert_table(table_name, record);
 
@@ -311,12 +327,21 @@ int parser_match_sql_table(char *sql, char *res) {
         return 1;
     }
 
-        // 匹配 SQL: update table 表名
+        // 匹配 SQL: update 表名
     else if (parser_match_regex(update_table_pattern, sql)) {
 
-        char *table_name = analyst_analysis_sql_insert_table_get_table_name(sql);
+        char *table_name = analyst_analysis_sql_update_table_get_table_name(sql);
+
+        char **field_name_list = (char **) malloc(sizeof(char **) * 100);
+        int *field_type_list = (int *) malloc(sizeof(int *) * 100);
+        int *field_value_int = (int *) malloc(sizeof(int *) * 100);
+        float *field_value_float = (float *) malloc(sizeof(float *) * 100);
+        char *field_value_char = (char *) malloc(sizeof(char *) * 100);
+        char **field_value_string = (char **) malloc(sizeof(char **) * 100);
+        int field_count = 0;
 
         printf("\n实际执行SQL: update %s set name = \"name被修改了\", sex = \"sex被修改了\" where id = 4", table_name);
+
 
         int update_table_code = executor_handle_sql_update_table(table_name);
 

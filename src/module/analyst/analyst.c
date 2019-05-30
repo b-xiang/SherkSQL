@@ -77,9 +77,15 @@ char *analyst_analysis_sql_drop_table_get_table_name(char *command) {
 
 char *analyst_analysis_sql_create_table_get_table_name(char *command) {
 
-    char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+    if (0 > grocery_string_get_str_first_char_index(command, "(", 0)) {
 
-    return pos;
+        char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+        return pos;
+    }
+
+    int left = grocery_string_get_str_last_char_index(command, "table ", 1) + 1;
+    int right = grocery_string_get_str_first_char_index(command, "(", 1) - 1;
+    return grocery_string_cutwords(command, left, right);
 }
 
 char *analyst_analysis_sql_desc_table_get_table_name(char *command) {
@@ -110,11 +116,24 @@ char *analyst_analysis_sql_select_table_part_get_table_name(char *command) {
     return pos;
 }
 
+char *analyst_analysis_sql_update_table_get_table_name(char *command) {
+
+    int left = grocery_string_get_str_last_char_index(command, "update ", 1) + 1;
+    int right = grocery_string_get_str_first_char_index(command, "set", 1) - 1;
+    return grocery_string_trim(grocery_string_cutwords(command, left, right));
+}
+
 char *analyst_analysis_sql_insert_table_get_table_name(char *command) {
 
-    char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+    if (0 > grocery_string_get_str_first_char_index(command, "(", 0)) {
 
-    return pos;
+        char *pos = grocery_string_get_str_next_char_address(command, "table ", 1);
+        return pos;
+    }
+
+    int left = grocery_string_get_str_last_char_index(command, "into ", 1) + 1;
+    int right = grocery_string_get_str_first_char_index(command, "(", 1) - 1;
+    return grocery_string_cutwords(command, left, right);
 }
 
 char *analyst_analysis_sql_insert_table_get_record(char *command) {
@@ -129,6 +148,60 @@ char *analyst_analysis_sql_insert_table_get_record_update(char *command) {
     char *table_name = analyst_analysis_sql_insert_table_get_table_name(command);
 
     return faker_simulate_a_record_update_json(6, table_name);
+}
+
+/**
+ * 分析字段的类型 - 根据 field_type( 字符串类型 )
+ * @param field_type
+ * @return
+ */
+int analyst_analysis_field_type_by_field_type_string(char *field_type) {
+
+    if (0 == strcmp("int", field_type)) {
+
+        return FIELD_TYPE_INT;
+    }
+
+    if (0 == strcmp("float", field_type)) {
+
+        return FIELD_TYPE_FLOAT;
+    }
+
+    if (0 == strcmp("char", field_type)) {
+
+        return FIELD_TYPE_CHAR;
+    }
+
+    if (0 == strcmp("string", field_type)) {
+
+        return FIELD_TYPE_STRING;
+    }
+
+    return FIELD_TYPE_ERROR;
+}
+
+/**
+ * 分析字段的类型 - 根据 field_value( 字符串类型 )
+ * @return
+ */
+int analyst_analysis_field_type_by_field_value_string(const char *field_value) {
+
+    if ('\"' == field_value[0]) {
+
+        return FIELD_TYPE_STRING;
+    }
+
+    if ('\'' == field_value[0]) {
+
+        return FIELD_TYPE_CHAR;
+    }
+
+    if (0 < grocery_string_get_str_first_char_index(field_value, ".", 0)) {
+
+        return FIELD_TYPE_FLOAT;
+    }
+
+    return FIELD_TYPE_INT;
 }
 
 char **analyst_analysis_sql_create_table_get_field_name_list(char *command) {
@@ -159,7 +232,7 @@ int *analyst_analysis_sql_create_table_get_field_type_list(char *command) {
 int analyst_analysis_sql_is_create_sys_table(char *table_name) {
 
     // 必须写这个, 必须先判断database是否为空, 否则下面 strcmp 时程序会异常退出
-    if(NULL == variable_master_session_variables.database_vessel.database_name){
+    if (NULL == variable_master_session_variables.database_vessel.database_name) {
 
         return 0;
     }
