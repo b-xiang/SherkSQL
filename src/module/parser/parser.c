@@ -340,8 +340,15 @@ int parser_match_sql_table(char *sql, char *res) {
         char **field_value_string = (char **) malloc(sizeof(char **) * 100);
         int field_count = 0;
 
-        printf("\n实际执行SQL: update %s set name = \"name被修改了\", sex = \"sex被修改了\" where id = 4", table_name);
+        char **condition_name_list = (char **) malloc(sizeof(char **) * 100);
+        char **condition_operator_list = (char **) malloc(sizeof(char **) * 100);
+        char **condition_value_list = (char **) malloc(sizeof(char **) * 100);
 
+        extractor_extract_update_sql(sql, &field_count, field_name_list, field_type_list, field_value_int,
+                                     field_value_float, field_value_char, field_value_string, condition_name_list,
+                                     condition_operator_list, condition_value_list);
+
+        printf("\n实际执行SQL: update %s set name = \"name被修改了\", sex = \"sex被修改了\" where id = 4", table_name);
 
         int update_table_code = executor_handle_sql_update_table(table_name);
 

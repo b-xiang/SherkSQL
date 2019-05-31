@@ -56,4 +56,3 @@ builder_generate_record_json(int field_count, char **field_name_list, int *field
 
     return table_traverser_get_a_record_json(first_field_pointer, field_count);
 }
-
