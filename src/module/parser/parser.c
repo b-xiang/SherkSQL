@@ -14,6 +14,7 @@
 #include <SherkService/test/module/test_users/test_users.h>
 #include <SherkSQL/src/module/extractor/extractor.h>
 #include <SherkSQL/src/module/builder/builder.h>
+#include <SherkService/test/module/test_log/test_log.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -73,6 +74,9 @@ int parser_match_sql_show_system(char *sql, char *res) {
     // show users;
     char *show_users_pattern = "^\\s*show users.*$";
 
+    // show logs; // 支持 show log 和 show logs 2种
+    char *show_logs_pattern = "^\\s*show logs.*$";
+
     // 匹配 SQL: show variables
     if (parser_match_regex(show_variables_pattern, sql)) {
 
@@ -96,6 +100,36 @@ int parser_match_sql_show_system(char *sql, char *res) {
         test_users_print_users();
         sprintf(res, "Show Users Success.\n");
 
+        return 1;
+    }
+
+        // 匹配 SQL: show logs
+    else if (parser_match_regex(show_logs_pattern, sql)) {
+
+        if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "access", 0)) {
+
+            test_log_print_level_is_access();
+        } else if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "debug", 0)) {
+
+            test_log_print_level_is_debug();
+        } else if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "error", 0)) {
+
+            test_log_print_level_is_error();
+        } else if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "bin", 0)) {
+
+            test_log_print_sql_bin();
+        } else if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "query", 0)) {
+
+            test_log_print_sql_query();
+        } else if (-1 < grocery_string_get_str_first_char_index(show_logs_pattern, "slow", 0)) {
+
+            test_log_print_sql_slow();
+        } else {
+
+            test_log_print_log();
+        }
+
+        sprintf(res, "Show Logs Success.\n");
         return 1;
     }
 
