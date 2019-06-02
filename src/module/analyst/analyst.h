@@ -13,6 +13,8 @@ extern char *analyst_analysis_sql_create_database_get_database_name(char *comman
 
 extern char *analyst_analysis_sql_drop_table_get_table_name(char *command);
 
+extern char *analyst_analysis_sql_delete_from_table_get_table_name(char *command);
+
 extern char *analyst_analysis_sql_create_table_get_table_name(char *command);
 
 extern char *analyst_analysis_sql_desc_table_get_table_name(char *command);

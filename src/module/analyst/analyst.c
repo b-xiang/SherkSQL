@@ -75,6 +75,13 @@ char *analyst_analysis_sql_drop_table_get_table_name(char *command) {
     return pos;
 }
 
+char *analyst_analysis_sql_delete_from_table_get_table_name(char *command) {
+
+    char *pos = grocery_string_get_str_next_char_address(command, "from ", 1);
+
+    return pos;
+}
+
 char *analyst_analysis_sql_create_table_get_table_name(char *command) {
 
     if (0 > grocery_string_get_str_first_char_index(command, "(", 0)) {

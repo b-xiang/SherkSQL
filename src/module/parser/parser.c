@@ -15,6 +15,7 @@
 #include <SherkSQL/src/module/extractor/extractor.h>
 #include <SherkSQL/src/module/builder/builder.h>
 #include <SherkService/test/module/test_log/test_log.h>
+#include <SherkService/test/module/test_privileges/test_privileges.h>
 
 // 解析原理 : 正则 + 解析树
 
@@ -74,8 +75,11 @@ int parser_match_sql_show_system(char *sql, char *res) {
     // show users;
     char *show_users_pattern = "^\\s*show users.*$";
 
-    // show logs; // 支持 show log 和 show logs 2种
+    // show logs; 支持 show log 和 show logs 2种
     char *show_logs_pattern = "^\\s*show logs.*$";
+
+    // show privileges
+    char *show_privileges_pattern = "^\\s*show privileges.*$";
 
     // 匹配 SQL: show variables
     if (parser_match_regex(show_variables_pattern, sql)) {
@@ -99,6 +103,15 @@ int parser_match_sql_show_system(char *sql, char *res) {
 
         test_users_print_users();
         sprintf(res, "Show Users Success.\n");
+
+        return 1;
+    }
+
+        // 匹配 SQL: show privileges
+    else if (parser_match_regex(show_privileges_pattern, sql)) {
+
+        test_privileges_print_privileges();
+        sprintf(res, "Show Privileges Success.\n");
 
         return 1;
     }
@@ -176,8 +189,8 @@ int parser_match_sql_table(char *sql, char *res) {
     // update 数据表名
     char *update_table_pattern = "^\\s*update .*$";
 
-    // delete 数据表名
-    char *delete_table_pattern = "^\\s*delete table .*$";
+    // delete from 记录 - DELETE FROM table_name WHERE some_column=some_value;
+    char *delete_from_table_pattern = "^\\s*delete from .*$";
 
     // 匹配 SQL: show tables
     if (parser_match_regex(show_tables_pattern, sql)) {
@@ -243,6 +256,16 @@ int parser_match_sql_table(char *sql, char *res) {
         char *table_name = analyst_analysis_sql_drop_table_get_table_name(sql);
         executor_handle_sql_drop_table(table_name);
         sprintf(res, "Drop %s Table Success.\n", table_name);
+
+        return 1;
+    }
+
+        // 匹配 SQL: delete from 表 where
+    else if (parser_match_regex(delete_from_table_pattern, sql)) {
+
+        char *table_name = analyst_analysis_sql_delete_from_table_get_table_name(sql);
+        executor_handle_sql_delete_table(table_name);
+        sprintf(res, "Delete %s Table Success.\n", table_name);
 
         return 1;
     }
